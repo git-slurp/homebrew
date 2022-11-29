@@ -15,6 +15,8 @@ module RuboCop
         extend AutoCorrector
 
         def audit_formula(_node, _class_node, _parent_class_node, body_node)
+          return if body_node.nil?
+
           @present_components, @offensive_nodes = check_order(FORMULA_COMPONENT_PRECEDENCE_LIST, body_node)
 
           component_problem @offensive_nodes[0], @offensive_nodes[1] if @offensive_nodes
@@ -120,14 +122,15 @@ module RuboCop
             end
           end
           on_system_allowed_methods = %w[
-            depends_on
-            patch
-            resource
-            deprecate!
+            livecheck
+            keg_only
             disable!
+            deprecate!
+            depends_on
             conflicts_with
             fails_with
-            keg_only
+            resource
+            patch
             ignore_missing_libraries
           ]
           on_system_allowed_methods += on_system_methods.map(&:to_s)

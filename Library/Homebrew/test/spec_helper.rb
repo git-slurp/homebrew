@@ -180,6 +180,10 @@ RSpec.configure do |config|
     skip "Unzip is not installed." unless which("unzip")
   end
 
+  config.before(:each, :dev_on_linux) do
+    allow(Homebrew::EnvConfig).to receive(:developer?).and_return(true) if OS.linux?
+  end
+
   config.around do |example|
     def find_files
       return [] unless File.exist?(TEST_TMPDIR)
@@ -221,6 +225,9 @@ RSpec.configure do |config|
       if (example.metadata.keys & [:focus, :byebug]).empty? && !ENV.key?("HOMEBREW_VERBOSE_TESTS")
         $stdout.reopen(File::NULL)
         $stderr.reopen(File::NULL)
+      else
+        # don't retry when focusing/debugging
+        config.default_retry_count = 0
       end
       $stdin.reopen(File::NULL)
 

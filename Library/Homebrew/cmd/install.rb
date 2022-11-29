@@ -45,6 +45,8 @@ module Homebrew
                           "(binaries and symlinks are excluded, unless originally from the same cask)."
       switch "-v", "--verbose",
              description: "Print the verification and postinstall steps."
+      switch "-n", "--dry-run",
+             description: "Show what would be installed, but do not actually install anything."
       [
         [:switch, "--formula", "--formulae", {
           description: "Treat all named arguments as formulae.",
@@ -119,16 +121,18 @@ module Homebrew
         [:switch, "--overwrite", {
           description: "Delete files that already exist in the prefix while linking.",
         }],
-      ].each do |*args, **options|
+      ].each do |args|
+        options = args.pop
         send(*args, **options)
         conflicts "--cask", args.last
       end
       formula_options
       [
         [:switch, "--cask", "--casks", { description: "Treat all named arguments as casks." }],
-        *Cask::Cmd::AbstractCommand::OPTIONS,
-        *Cask::Cmd::Install::OPTIONS,
-      ].each do |*args, **options|
+        *Cask::Cmd::AbstractCommand::OPTIONS.map(&:dup),
+        *Cask::Cmd::Install::OPTIONS.map(&:dup),
+      ].each do |args|
+        options = args.pop
         send(*args, **options)
         conflicts "--formula", args.last
       end
@@ -136,6 +140,7 @@ module Homebrew
 
       conflicts "--ignore-dependencies", "--only-dependencies"
       conflicts "--build-from-source", "--build-bottle", "--force-bottle"
+      conflicts "--adopt", "--force"
 
       named_args [:formula, :cask], min: 1
     end
@@ -189,10 +194,12 @@ module Homebrew
         binaries:       args.binaries?,
         verbose:        args.verbose?,
         force:          args.force?,
+        adopt:          args.adopt?,
         require_sha:    args.require_sha?,
         skip_cask_deps: args.skip_cask_deps?,
         quarantine:     args.quarantine?,
         quiet:          args.quiet?,
+        dry_run:        args.dry_run?,
       )
     end
 
@@ -242,6 +249,7 @@ module Homebrew
       debug:                      args.debug?,
       quiet:                      args.quiet?,
       verbose:                    args.verbose?,
+      dry_run:                    args.dry_run?,
     )
 
     Upgrade.check_installed_dependents(
@@ -257,9 +265,10 @@ module Homebrew
       debug:                      args.debug?,
       quiet:                      args.quiet?,
       verbose:                    args.verbose?,
+      dry_run:                    args.dry_run?,
     )
 
-    Cleanup.periodic_clean!
+    Cleanup.periodic_clean!(dry_run: args.dry_run?)
 
     Homebrew.messages.display_messages(display_times: args.display_times?)
   rescue FormulaUnreadableError, FormulaClassUnavailableError,

@@ -113,11 +113,15 @@ module Homebrew
 
       def please_create_pull_requests(what = "unsupported configuration")
         <<~EOS
-          You will encounter build failures with some formulae.
-          Please create pull requests instead of asking for help on Homebrew's GitHub,
-          Twitter or any other official channels. You are responsible for resolving
-          any issues you experience while you are running this
-          #{what}.
+          It is expected behaviour that some formulae will fail to build in this #{what}.
+          It is expected behaviour that Homebrew will be buggy and slow.
+          Do not create any issues about this on Homebrew's GitHub repositories.
+          Do not create any issues even if you think this message is unrelated.
+          Any opened issues will be immediately closed without response.
+          Do not ask for help from MacHomebrew on Twitter.
+          You may ask for help in Homebrew's discussions but are unlikely to receive a response.
+          Try to figure out the problem yourself and submit a fix as a pull request.
+          We will review it but may or may not accept it.
         EOS
       end
 
@@ -591,7 +595,11 @@ module Homebrew
 
       def check_coretap_integrity
         coretap = CoreTap.instance
-        return if !coretap.installed? && EnvConfig.install_from_api?
+        unless coretap.installed?
+          return if EnvConfig.install_from_api?
+
+          CoreTap.ensure_installed!
+        end
 
         broken_tap(coretap) || examine_git_origin(coretap.path, Homebrew::EnvConfig.core_git_remote)
       end
@@ -874,8 +882,9 @@ module Homebrew
 
         <<~EOS
           Your Homebrew's prefix is not #{Homebrew::DEFAULT_PREFIX}.
-          Some of Homebrew's bottles (binary packages) can only be used with the default
-          prefix (#{Homebrew::DEFAULT_PREFIX}).
+
+          Many of Homebrew's bottles (binary packages) can only be used with the default prefix.
+          Consider uninstalling Homebrew and reinstalling into the default prefix.
           #{please_create_pull_requests}
         EOS
       end
@@ -1045,11 +1054,11 @@ module Homebrew
         when :quarantine_available
           nil
         when :xattr_broken
-          "There's no working version of `xattr` on this system."
+          "No Cask quarantine support available: there's no working version of `xattr` on this system."
         when :no_swift
-          "Swift is not available on this system."
+          "No Cask quarantine support available: there's no available version of `swift` on this system."
         else
-          "Unknown support status"
+          "No Cask quarantine support available: unknown reason."
         end
       end
 

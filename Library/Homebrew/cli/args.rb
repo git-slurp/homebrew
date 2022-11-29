@@ -134,8 +134,8 @@ module Homebrew
         end
       end
 
-      def respond_to_missing?(*)
-        !frozen?
+      def respond_to_missing?(method_name, *)
+        !frozen? || @table.key?(method_name)
       end
 
       def method_missing(method_name, *args)
@@ -152,3 +152,5 @@ module Homebrew
     end
   end
 end
+
+require "extend/os/args"

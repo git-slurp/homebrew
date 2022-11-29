@@ -31,6 +31,9 @@ module Homebrew
       def newer_only?; end
 
       sig { returns(T::Boolean) }
+      def resources?; end
+
+      sig { returns(T::Boolean) }
       def full_name?; end
 
       sig { returns(T::Boolean) }
@@ -133,6 +136,9 @@ module Homebrew
       def all?; end
 
       sig { returns(T::Boolean) }
+      def eval_all?; end
+
+      sig { returns(T::Boolean) }
       def full?; end
 
       sig { returns(T::Boolean) }
@@ -143,6 +149,9 @@ module Homebrew
 
       sig { returns(T::Boolean) }
       def syntax?; end
+
+      sig { returns(T::Boolean) }
+      def no_simulate?; end
 
       sig { returns(T::Boolean) }
       def ignore_non_pypi_packages?; end

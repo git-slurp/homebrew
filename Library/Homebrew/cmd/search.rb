@@ -44,6 +44,10 @@ module Homebrew
       switch "--desc",
              description: "Search for formulae with a description matching <text> and casks with " \
                           "a name or description matching <text>."
+      switch "--eval-all",
+             depends_on:  "--desc",
+             description: "Evaluate all available formulae and casks, whether installed or not, to search their " \
+                          "descriptions. Implied if HOMEBREW_EVAL_ALL is set."
       switch "--pull-request",
              description: "Search for GitHub pull requests containing <text>."
       switch "--open",
@@ -75,6 +79,9 @@ module Homebrew
     string_or_regex = query_regexp(query)
 
     if args.desc?
+      if !args.eval_all? && !Homebrew::EnvConfig.eval_all?
+        odeprecated "brew search --desc", "brew search --desc --eval-all or HOMEBREW_EVAL_ALL"
+      end
       search_descriptions(string_or_regex, args)
     elsif args.pull_request?
       search_pull_requests(query, args)
@@ -139,9 +146,21 @@ module Homebrew
     print_formulae &&= all_formulae.any?
     print_casks &&= all_casks.any?
 
-    ohai "Formulae", Formatter.columns(all_formulae) if print_formulae
+    if print_formulae
+      if $stdout.tty?
+        ohai "Formulae", Formatter.columns(all_formulae)
+      else
+        puts all_formulae
+      end
+    end
     puts if print_formulae && print_casks
-    ohai "Casks", Formatter.columns(all_casks) if print_casks
+    if print_casks
+      if $stdout.tty?
+        ohai "Casks", Formatter.columns(all_casks)
+      else
+        puts all_casks
+      end
+    end
 
     count = all_formulae.count + all_casks.count
 
